@@ -1,4 +1,5 @@
 #include "queue.h"
+#include "server.h"
 #include <stdio.h>
 #include <limits.h>
 
@@ -7,19 +8,6 @@ int main(){
 
     init_queue(&q, 10);
 
-    push_to_queue(&q, 9);
-    push_to_queue(&q, 1);
-    push_to_queue(&q, 5);
-    push_to_queue(&q, 4);
-    push_to_queue(&q, 42);
+    start_listening(9152, &q);
 
-
-    int t;
-    while( (t=pull_from_queue(&q)) != QUEUE_EMPTY )
-    {
-        printf(
-            "value = %i\n", t
-        );
-    }
-    
 }
