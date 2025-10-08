@@ -1,9 +1,9 @@
 #ifndef QUEUE_H
 #define QUEUE_H
-#define QUEUE_EMPTY INT_MIN
+#define QUEUE_EMPTY "EMPTY"
 
 typedef struct {
-    int *values;
+    char** values;
     int head;
     int tail;
     int num_entries;
@@ -16,6 +16,6 @@ void purge_queue(queue *queue);
 int is_queue_empty(queue *queue);
 int is_queue_full(queue *queue);
 
-int push_to_queue(queue *queue, int value);
-int pull_from_queue(queue *queue);
+int push_to_queue(queue *queue, char* value);
+char* pull_from_queue(queue *queue);
 #endif

@@ -4,12 +4,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define QUEUE_EMPTY INT_MIN
-
 void init_queue(queue *queue, int max_size) {
     queue->size        = max_size;
-    queue->values      = malloc(sizeof(int)* queue->size);
-    queue->num_entries = 0; // starts empty
+    queue->values      = malloc(sizeof(char*) * queue->size);
+    queue->num_entries = 0; 
     queue->head        = 0;
     queue->tail        = 0;
 }
@@ -26,7 +24,7 @@ int is_queue_full(queue *queue){
     return (queue->num_entries == queue->size);
 }
 
-int push_to_queue(queue *queue, int value){
+int push_to_queue(queue *queue, char* value){
     if ( is_queue_full(queue) ){
         return 0;
     }
@@ -38,8 +36,8 @@ int push_to_queue(queue *queue, int value){
     return 1;
 }
 
-int pull_from_queue(queue *queue) {
-    int result;
+char* pull_from_queue(queue *queue) {
+    char* result;
     
     if (is_queue_empty(queue)) {
         return QUEUE_EMPTY;

@@ -8,13 +8,34 @@
 #include <arpa/inet.h>
 #include <signal.h>
 
-int parse_msg(char *msg) {
-    char *ptr = strchr(msg, ';'); 
-    if (!ptr) return -1;          
-    return atoi(ptr + 1);         
-}
+//---------------------------------------------------------------------
+//                             VARIABLE
+//---------------------------------------------------------------------
 
 int server_fd;
+
+//---------------------------------------------------------------------
+//                             FUNCTION
+//---------------------------------------------------------------------
+
+char* parse_msg(const char *msg) {
+    const char *ptr = strchr(msg, ' ');
+    if (!ptr) return strdup("error");
+
+    const char *start = ptr + 1;
+    const char *end = msg + strlen(msg) - 1;
+
+    int len = end - start + 1;
+    if (len <= 0) return strdup("error");
+
+    char *buffer = malloc(len + 1);
+    if (!buffer) return strdup("error");
+
+    strncpy(buffer, start, len);
+    buffer[len] = '\0';
+
+    return buffer;
+}
 
 void handle_sigint(int sig) {
     printf("\n[server] Caught signal %d, shutting down...\n", sig);
@@ -73,34 +94,42 @@ int start_listening(int port, queue *hot_queue) {
             }
 
             buffer[strcspn(buffer, "\r\n")] = 0; 
+            //-------------------------------------------
+            //                   PUSH
+            //-------------------------------------------
             if (strncmp(buffer, "push", 4) == 0){
-                int value = parse_msg(buffer);
-                if (value >= 0) {
+                char* value = parse_msg(buffer);
+                if (strncmp(buffer, "erro", 4) != 0) {
                     int transaction_status = push_to_queue(hot_queue, value);
                     if (transaction_status == 0) {
                         sprintf(buffer, "-err FULL\n");
-                        send(client_fd, buffer, strlen(buffer), 0);
                     }else{
                         sprintf(buffer, "+ok\n");
-                        send(client_fd, buffer, strlen(buffer), 0);
                     }
                 } else {
                     sprintf(buffer, "-err invalid format\n");
-                    send(client_fd, buffer, strlen(buffer), 0);
-                }
-            }
-
-            if (strncmp(buffer, "pull", 4) == 0){
-                int value = pull_from_queue(hot_queue);
-                if (value == QUEUE_EMPTY){
-                    sprintf(buffer, "+ok EMPTY\n");
-                } else {
-                    sprintf(buffer, "+ok %d\n", value);
                 }
 
                 send(client_fd, buffer, strlen(buffer), 0);
             }
 
+            //-------------------------------------------
+            //                   PULL
+            //-------------------------------------------
+            if (strncmp(buffer, "pull", 4) == 0){
+                char* value = pull_from_queue(hot_queue);
+                if (strncmp(buffer, "EMPTY", 4) == 0){
+                    sprintf(buffer, "+ok EMPTY\n");
+                } else {
+                    sprintf(buffer, "+ok %s\n", value);
+                }
+
+                send(client_fd, buffer, strlen(buffer), 0);
+            }
+
+            //-------------------------------------------
+            //                   BYE
+            //-------------------------------------------
             if (strcmp(buffer, "bye") == 0) {
                 printf("[connection] Connection close by client\n");
                 close(client_fd);
